@@ -61,9 +61,15 @@ enum SudoersManager {
     private static let pmsetPath = "/usr/bin/pmset"
 
     static func isConfigured(forUser username: String) -> Bool {
-        let expected = expectedLine(forUser: username)
-        guard let existing = try? String(contentsOfFile: filePath, encoding: .utf8) else { return false }
-        return existing.trimmingCharacters(in: .whitespacesAndNewlines) == expected.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Try a no-op pmset read with -n (non-interactive, fails if password is needed)
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+        process.arguments = ["-n", "/usr/bin/pmset", "-g", "custom"]
+        process.standardOutput = Pipe()
+        process.standardError = Pipe()
+        try? process.run()
+        process.waitUntilExit()
+        return process.terminationStatus == 0
     }
 
     // MUST be called from a background thread — blocks while the macOS password dialog is open.
@@ -135,6 +141,8 @@ class ToggleMenuItemView: NSView {
             sw.state = isOn ? .on : .off
             sw.target = self
             sw.action = #selector(switchChanged)
+            // Force active-window appearance so the accent color renders in the menu panel
+            sw.appearance = NSApp.effectiveAppearance
             sw.frame = NSRect(
                 x: Self.itemWidth - sw.frame.width - 12,
                 y: (Self.itemHeight - sw.frame.height) / 2,
@@ -168,6 +176,13 @@ class ToggleMenuItemView: NSView {
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        // Re-apply appearance once the view is in the menu window
+        toggleSwitch?.appearance = NSApp.effectiveAppearance
+        toggleSwitch?.needsDisplay = true
+    }
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
@@ -228,9 +243,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         updateIcon()
 
-        let menu = NSMenu()
-        menu.delegate = self
-        statusItem?.menu = menu
+        statusItem?.button?.target = self
+        statusItem?.button?.action = #selector(handleClick(_:))
+        statusItem?.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -242,6 +257,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     // MARK: Menu
+
+    @objc func handleClick(_ sender: NSStatusBarButton) {
+        guard let event = NSApp.currentEvent else { return }
+        let isRightClick = event.type == .rightMouseUp ||
+            (event.type == .leftMouseUp && event.modifierFlags.contains(.control))
+        if isRightClick {
+            let menu = NSMenu()
+            menu.delegate = self
+            statusItem?.menu = menu
+            sender.performClick(nil)
+        } else {
+            toggle()
+        }
+    }
 
     func menuWillOpen(_ menu: NSMenu) {
         menu.removeAllItems()
@@ -287,6 +316,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func menuDidClose(_ menu: NSMenu) {
+        statusItem?.menu = nil  // detach so left click toggles instead of reopening menu
         toggleView = nil
     }
 
@@ -398,25 +428,50 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: Icon
 
     func updateIcon() {
-        let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
-        // laptopcomputer = open lid (inactive), tinted green = active/lid locked open
-        guard let base = NSImage(systemSymbolName: "laptopcomputer",
-                                 accessibilityDescription: nil)?
-                .withSymbolConfiguration(config) else { return }
+        statusItem?.button?.image = makeShellIcon(active: isActive)
+    }
 
-        if isActive {
-            let result = NSImage(size: base.size, flipped: false) { [activeColor] rect in
-                base.draw(in: rect)
-                activeColor.setFill()
-                rect.fill(using: .sourceAtop)
-                return true
-            }
-            result.isTemplate = false
-            statusItem?.button?.image = result
+    func makeShellIcon(active: Bool) -> NSImage {
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size)
+        image.lockFocus()
+
+        if active {
+            // Closed clam: oval body with a center seam
+            activeColor.setFill()
+            NSBezierPath(ovalIn: NSRect(x: 1, y: 5, width: 16, height: 8)).fill()
+            NSColor.white.withAlphaComponent(0.55).setStroke()
+            let seam = NSBezierPath()
+            seam.move(to: NSPoint(x: 1, y: 9))
+            seam.line(to: NSPoint(x: 17, y: 9))
+            seam.lineWidth = 0.75
+            seam.stroke()
         } else {
-            base.isTemplate = true
-            statusItem?.button?.image = base
+            // Open clam: top dome + bottom dome with a gap between them
+            NSColor.black.setFill()
+
+            // Top shell (dome arching upward from y=10)
+            let top = NSBezierPath()
+            top.move(to: NSPoint(x: 2, y: 10))
+            top.line(to: NSPoint(x: 16, y: 10))
+            top.curve(to: NSPoint(x: 2, y: 10),
+                      controlPoint1: NSPoint(x: 16, y: 17),
+                      controlPoint2: NSPoint(x: 2, y: 17))
+            top.fill()
+
+            // Bottom shell (dome arching downward from y=8)
+            let bottom = NSBezierPath()
+            bottom.move(to: NSPoint(x: 2, y: 8))
+            bottom.line(to: NSPoint(x: 16, y: 8))
+            bottom.curve(to: NSPoint(x: 2, y: 8),
+                         controlPoint1: NSPoint(x: 16, y: 1),
+                         controlPoint2: NSPoint(x: 2, y: 1))
+            bottom.fill()
         }
+
+        image.unlockFocus()
+        image.isTemplate = !active
+        return image
     }
 
     // MARK: Settings Actions
