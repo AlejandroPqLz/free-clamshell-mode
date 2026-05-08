@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🔨 Compilando Free Clamshell Mode app..."
+echo "🔨 Building Free Clamshell Mode app..."
 
 BUILD_DIR="build"
 APP_NAME="free-clamshell-mode"
@@ -52,5 +52,5 @@ EOF
 
 chmod +x "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 
-echo "✅ App compilada: $APP_BUNDLE"
-echo "🚀 Para ejecutar: open $APP_BUNDLE"
+echo "✅ App built: $APP_BUNDLE"
+echo "🚀 To run: open $APP_BUNDLE"
