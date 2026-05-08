@@ -61,7 +61,6 @@ enum SudoersManager {
     private static let pmsetPath = "/usr/bin/pmset"
 
     static func isConfigured(forUser username: String) -> Bool {
-        // Try a no-op pmset read with -n (non-interactive, fails if password is needed)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
         process.arguments = ["-n", "/usr/bin/pmset", "-g", "custom"]
@@ -141,7 +140,6 @@ class ToggleMenuItemView: NSView {
             sw.state = isOn ? .on : .off
             sw.target = self
             sw.action = #selector(switchChanged)
-            // Force active-window appearance so the accent color renders in the menu panel
             sw.appearance = NSApp.effectiveAppearance
             sw.frame = NSRect(
                 x: Self.itemWidth - sw.frame.width - 12,
@@ -179,7 +177,6 @@ class ToggleMenuItemView: NSView {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        // Re-apply appearance once the view is in the menu window
         toggleSwitch?.appearance = NSApp.effectiveAppearance
         toggleSwitch?.needsDisplay = true
     }
@@ -316,7 +313,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func menuDidClose(_ menu: NSMenu) {
-        statusItem?.menu = nil  // detach so left click toggles instead of reopening menu
+        statusItem?.menu = nil
         toggleView = nil
     }
 
@@ -432,50 +429,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func makeShellIcon(active: Bool) -> NSImage {
-        let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size)
-        image.lockFocus()
-
+        let symbolName = active ? "fossil.shell.fill" : "fossil.shell"
+        var config = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium)
         if active {
-            // Closed pearl shell: rounded lens with a center seam
-            activeColor.setFill()
-            NSBezierPath(ovalIn: NSRect(x: 1, y: 5, width: 16, height: 8)).fill()
-            NSColor.white.withAlphaComponent(0.55).setStroke()
-            let seam = NSBezierPath()
-            seam.move(to: NSPoint(x: 1, y: 9))
-            seam.line(to: NSPoint(x: 17, y: 9))
-            seam.lineWidth = 0.75
-            seam.stroke()
-        } else {
-            // Open pearl shell: filled fan/scallop with transparent rib cutouts
-            let hinge = NSPoint(x: 9, y: 1)
-            let radius: CGFloat = 15
-
-            let fan = NSBezierPath()
-            fan.move(to: hinge)
-            fan.appendArc(withCenter: hinge, radius: radius,
-                          startAngle: 15, endAngle: 165, clockwise: false)
-            fan.close()
-            NSColor.black.setFill()
-            fan.fill()
-
-            // Cut radiating ribs through the fan using clear compositing
-            if let ctx = NSGraphicsContext.current {
-                ctx.compositingOperation = .clear
-                for angleDeg in stride(from: 37.0, through: 143.0, by: 26.5) {
-                    let rad = angleDeg * CGFloat.pi / 180
-                    let rib = NSBezierPath()
-                    rib.move(to: hinge)
-                    rib.line(to: NSPoint(x: hinge.x + radius * cos(rad),
-                                         y: hinge.y + radius * sin(rad)))
-                    rib.lineWidth = 1.0
-                    rib.stroke()
-                }
-                ctx.compositingOperation = .sourceOver
-            }
+            config = config.applying(
+                NSImage.SymbolConfiguration(paletteColors: [activeColor])
+            )
         }
-
-        image.unlockFocus()
+        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
+            .withSymbolConfiguration(config) ?? NSImage()
         image.isTemplate = !active
         return image
     }
