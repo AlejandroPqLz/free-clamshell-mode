@@ -430,7 +430,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func makeShellIcon(active: Bool) -> NSImage {
         let symbolName = active ? "fossil.shell.fill" : "fossil.shell"
-        var config = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium)
+        var config = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         if active {
             config = config.applying(
                 NSImage.SymbolConfiguration(paletteColors: [activeColor])
