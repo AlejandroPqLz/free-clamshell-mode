@@ -437,7 +437,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         image.lockFocus()
 
         if active {
-            // Closed clam: oval body with a center seam
+            // Closed pearl shell: rounded lens with a center seam
             activeColor.setFill()
             NSBezierPath(ovalIn: NSRect(x: 1, y: 5, width: 16, height: 8)).fill()
             NSColor.white.withAlphaComponent(0.55).setStroke()
@@ -447,26 +447,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             seam.lineWidth = 0.75
             seam.stroke()
         } else {
-            // Open clam: top dome + bottom dome with a gap between them
+            // Open pearl shell: filled fan/scallop with transparent rib cutouts
+            let hinge = NSPoint(x: 9, y: 1)
+            let radius: CGFloat = 15
+
+            let fan = NSBezierPath()
+            fan.move(to: hinge)
+            fan.appendArc(withCenter: hinge, radius: radius,
+                          startAngle: 15, endAngle: 165, clockwise: false)
+            fan.close()
             NSColor.black.setFill()
+            fan.fill()
 
-            // Top shell (dome arching upward from y=10)
-            let top = NSBezierPath()
-            top.move(to: NSPoint(x: 2, y: 10))
-            top.line(to: NSPoint(x: 16, y: 10))
-            top.curve(to: NSPoint(x: 2, y: 10),
-                      controlPoint1: NSPoint(x: 16, y: 17),
-                      controlPoint2: NSPoint(x: 2, y: 17))
-            top.fill()
-
-            // Bottom shell (dome arching downward from y=8)
-            let bottom = NSBezierPath()
-            bottom.move(to: NSPoint(x: 2, y: 8))
-            bottom.line(to: NSPoint(x: 16, y: 8))
-            bottom.curve(to: NSPoint(x: 2, y: 8),
-                         controlPoint1: NSPoint(x: 16, y: 1),
-                         controlPoint2: NSPoint(x: 2, y: 1))
-            bottom.fill()
+            // Cut radiating ribs through the fan using clear compositing
+            if let ctx = NSGraphicsContext.current {
+                ctx.compositingOperation = .clear
+                for angleDeg in stride(from: 37.0, through: 143.0, by: 26.5) {
+                    let rad = angleDeg * CGFloat.pi / 180
+                    let rib = NSBezierPath()
+                    rib.move(to: hinge)
+                    rib.line(to: NSPoint(x: hinge.x + radius * cos(rad),
+                                         y: hinge.y + radius * sin(rad)))
+                    rib.lineWidth = 1.0
+                    rib.stroke()
+                }
+                ctx.compositingOperation = .sourceOver
+            }
         }
 
         image.unlockFocus()
