@@ -1,12 +1,28 @@
 # free-clamshell-mode
 
+<pre>
+ _______ .______       _______  _______          ______  __          ___      .___  ___.      _______. __    __   _______  __       __             .___  ___.   ______    _______   _______ 
+|   ____||   _  \     |   ____||   ____|        /      ||  |        /   \     |   \/   |     /       ||  |  |  | |   ____||  |     |  |            |   \/   |  /  __  \  |       \ |   ____|
+|  |__   |  |_)  |    |  |__   |  |__    ______|  ,----'|  |       /  ^  \    |  \  /  |    |   (----`|  |__|  | |  |__   |  |     |  |      ______|  \  /  | |  |  |  | |  .--.  ||  |__   
+|   __|  |      /     |   __|  |   __|  |______|  |     |  |      /  /_\  \   |  |\/|  |     \   \    |   __   | |   __|  |  |     |  |     |______|  |\/|  | |  |  |  | |  |  |  ||   __|  
+|  |     |  |\  \----.|  |____ |  |____        |  `----.|  `----./  _____  \  |  |  |  | .----)   |   |  |  |  | |  |____ |  `----.|  `----.       |  |  |  | |  `--'  | |  '--'  ||  |____ 
+|__|     | _| `._____||_______||_______|        \______||_______/__/     \__\ |__|  |__| |_______/    |__|  |__| |_______||_______||_______|       |__|  |__|  \______/  |_______/ |_______|
+                                                                                                                                                                                            
+</pre>
+
+<p align="center">
+    <a href="https://www.apple.com/macos/" alt="macOS">
+        <img src="https://img.shields.io/badge/macOS_11.0+-000000?style=flat&logo=apple&logoColor=white" /></a>
+    <a href="https://www.swift.org/" alt="Swift">
+        <img src="https://img.shields.io/badge/Swift_5.5+-F05138?style=flat&logo=swift&logoColor=white" /></a>
+    <a href="https://developer.apple.com/xcode/" alt="Xcode Command Line Tools">
+        <img src="https://img.shields.io/badge/Xcode_CLT-required-147EFB?style=flat&logo=xcode&logoColor=white" /></a>
+    <br>
+    <a href="https://github.com/AlejandroPqLz/free-clamshell-mode" alt="GitHub">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" /></a>
+</p>
+
 Minimal macOS menu bar app that keeps your Mac awake with the lid closed — no AC power required.
-
-## Requirements
-
-- macOS 11.0+
-- Swift 5.5+
-- Terminal
 
 ## Build
 
